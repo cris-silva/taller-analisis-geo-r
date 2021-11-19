@@ -14,7 +14,7 @@ git clone https://github.com/cris-silva/igisc-workshop_2021.git
 
 Puedes contactar a los presentadores mediante correo electrónico:
 
-* Ana J. Alegre [jalegre@centrogeo.edu.mx](mailto:jalegre@centrogeo.edu.mx)
-* Cristian Silva [csilva@centrogeo.edu.mx](mailto:csilva@centrogeo.edu.mx)
+* Ana J. Alegre ([jalegre@centrogeo.edu.mx](mailto:jalegre@centrogeo.edu.mx))
+* Cristian Silva ([csilva@centrogeo.edu.mx](mailto:csilva@centrogeo.edu.mx))
 
 Conoce más sobre CentroGeo en [su sitio oficial](https://www.centrogeo.org.mx).
