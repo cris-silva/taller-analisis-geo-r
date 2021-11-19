@@ -1,4 +1,4 @@
-# Taller de Análisis Geoestadístico con R
+# Taller de Análisis Geoespacial con R
 
 ## Instrucciones
 
