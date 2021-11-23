@@ -1,0 +1,323 @@
+---
+title: "3. Análisis exploratorio de Datos (EDA)"
+author: "Ana J. Alegre (jalegre@centrogeo.edu.mx), Cristian Silva (csilva@centrogeo.edu.mx)"
+output: html_notebook
+date: "25/11/2021"
+---
+
+## Introducción
+
+La inspección visual de los datos es un principio central del Análisis Exploratorio de Datos (AED). El AED hace hincapié en el análisis de los datos a través de medios visuales y gráficos para fundamentar las hipótesis y validar los supuestos. Los seres humanos dominan la capacidad de detectar patrones con sólo mirar e inspeccionar un objeto. Como científicos de datos, hacemos un gran servicio al utilizar nuestra visión para intuir rápidamente patrones en los gráficos (Onaya, 2020).
+
+## Objectivo
+
+IEn esta sección revisaremos algunas instrucciones para echar un primer vistazo a nuestros datos, calcularemos algunos estadísticos descriptivos y crearemos visualizaciones de la distribución (histogramas y boxplot). Además, pasaremos de estos estadísticos básicos como las medidas de tendencia central y de dispersión a derivar y visualizar estos mismos conceptos en el análisis espacial.
+
+## Preparación de los datos
+
+En primer lugar, eliminamos todos los objetos del entorno:
+```{r Limpiar las variables del entorno}
+rm(list = ls())
+```
+
+## Análisis Exploratiro de datos Univariado
+
+Calcularemos algunos estadísticos descriptivos y crearemos visualizaciones de la distribución de una sola variable (histogramas, gráficos de caja y bigotes). 
+Carga los paquetes que se van a utilizar:
+```{r Load packages}
+library(tidyverse)
+library(lubridate)
+library(sf)
+library(tmap)
+library(raster)
+library(aspace)
+```
+
+Trabajaremos con los datos que ya has limpiado y creado en la práctica anterior. El archivo "geopackage" que contiene las estadísticas de delitos (homicidio, extorsión y secuestro) por estado en México (states_offenses.gpkg).
+
+Cargue los datos que obtuvo en el ejercicio 2. Manejo de datos planos y espaciales:
+```{r Leer los datos de delitos por estados}
+state_data <-
+st_read("Data/states_offenses.gpkg") %>% 
+  glimpse()
+```
+
+Para obtener una visión general de las medidas básicas de las estadísticas descriptivas podemos utilizar "summary":
+```{r Información sobre homicidios}
+summary(state_data$homicidio)
+```
+
+El rango es una medida de dispersión que muestra la diferencia entre los valores más altos (máximos) y más bajos (mínimos) de un conjunto de observaciones:
+```{r Rango de homicidios}
+range(state_data$homicidio)
+```
+
+La desviación estándar es una estadística de resumen que mide el grado de dispersión de los valores de los datos en torno a la media (o centro) de la distribución:
+```{r Desviación estándar de homicidios}
+sd(state_data$homicidio)
+```
+
+La varianza es una importante medida de dispersión o desigualdad que indica cómo varía un conjunto de observaciones con respecto a la media. Si hay una gran variación respecto a la media, la varianza será grande; asimismo, si es pequeña, la variación respecto a la media es estrecha:
+```{r Varianza de homicidios}
+var(state_data$homicidio)
+```
+
+### Histograma
+
+Uno de los medios más sencillos de generar un resumen gráfico es trazar la distribución de frecuencias de una sola variable (univariante) que se mide en una escala de intervalo. Revela el centro de los datos (media, mediana y moda), la dispersión de los datos (dispersión o desigualdad), la forma y la distribución (asimetría) de los datos y la evidencia de posibles valores atípicos en los datos.
+```{r Histograma de homicidios}
+h_murders <- ggplot(state_data, aes(x= homicidio)) +
+  geom_histogram(bins = 8, alpha = 0.75) +
+  labs(title = "México: Murders histogram by state",
+       subtitle = "December 2018 to june 2021",
+       x = "Murders",
+       y = "States")
+h_murders
+```
+
+### Diagrama de caja
+
+El diagrama de caja muestra la forma de la distribución, el centro de los datos y su dispersión. El diagrama recoge específicamente cinco medidas estadísticas: los valores mínimo y máximo (rango), los intercuartiles inferior y superior, y la mediana:
+```{r Diagrama de caja de homicidios}
+bp_murders <- ggplot(state_data, aes(y= homicidio)) +
+  geom_boxplot() +
+  labs(title = "México: Murders boxplot",
+       subtitle = "December 2018 to june 2021",
+       y= "Murders")
+bp_murders
+```
+
+¿Cómo se ve esto en un mapa?
+```{r Mapa de cuartil de homicidios por estados}
+tm_shape(state_data) +
+  tm_polygons("homicidio", style = "quantile", n=4, title = "Murders by quartile")
+```
+
+Hubo ocho estados con más de 7.500 asesinatos: Baja California, Chihuahua, Jalisco, Michoacán, Guanajuato, Guerrero, Estado de México y Veracruz.
+
+## Análisis Exploratorio de Datos Multivariado 
+
+¿Y si queremos analizar más de una variable?
+
+Con las siguientes instrucciones transformamos nuestros datos en una tabla para poder analizar los datos de más de una variable:
+```{r Obtener objeto tibble}
+state_data_long <-
+  state_data %>% 
+  as_tibble() %>%
+  dplyr::select(entidad, homicidio, extorsion, secuestro, poblacion) %>% 
+  pivot_longer(c("homicidio", "extorsion", "secuestro"), names_to = "delito", values_to = "total") %>% 
+  glimpse()
+```
+
+Ahora podemos ver los gráficos de caja y bigotes de diferentes variables y compararlos:
+```{r Diagrama de caja por delito}
+boxplot_by_crime <-
+  ggplot(state_data_long) +
+  geom_boxplot(aes(x= delito, y = total)) +
+  labs(title = "México: Boxplot by crime",
+       subtitle = "December 2018 to july 2021",
+       y= "Murders")
+
+boxplot_by_crime
+```
+
+Podemos ver que las denuncias por asesinato tienen un volumen mucho mayor que las demás en México y también podemos ver los valores atípicos.
+
+### Gráfico de dispersión
+
+Se trata de una representación visual que muestra la dirección y la fuerza de una relación entre las dos variables (la dependiente Y frente a la independiente X). En concreto, el gráfico de dispersión explora si los valores de Y varían sistemáticamente con los valores correspondientes de X.
+```{r Diagrama de dispersión Homicidios vs. población}
+ggplot(state_data, aes(x= homicidio, y = poblacion)) +
+  geom_point() +
+  labs(title = "México: Relationship between murders and population",
+       subtitle = "December 2018 to july 2021",
+       x = "Murders",
+       y = "Population")
+```
+
+Para explorar visualmente las relaciones entre varios pares de variables, el mejor enfoque a utilizar es una matriz de dispersión. En una única visualización, la matriz de dispersión puede representar las relaciones entre todos los posibles pares de variables seleccionados para el análisis.
+```{r Diagrama de dispersión Delitos vs. población}
+ggplot(state_data_long, aes(x= total, y = poblacion)) +
+  geom_point() +
+  labs(title = "México: Relationship between crimes and population",
+       subtitle = "December 2018 to july 2021",
+       x = "Crimes",
+       y = "Population") +
+  facet_wrap(~delito, ncol = 2, scales = "free")
+```
+
+## Estadísticas Espaciales
+
+La estadística espacial se ocupa de la observación registrada en pares. La estadística descriptiva espacial se utiliza para medir las características básicas de los datos espaciales.
+
+Hay dos tipos comunes de medidas que pueden llevarse a cabo: (1) una que mide la centralidad (medidas espaciales de tendencia central) y (2) otra que mide la dispersión (medidas espaciales de dispersión) de los eventos en el espacio. Estas medidas proporcionan resúmenes útiles de una distribución espacial.
+
+Para este ejercicio vamos a utilizar datos espaciales puntuales de los reportes de asesinatos en la Ciudad de México, el archivo "geopackage" que guardaste en la práctica anterior (murders_cdmx.gpkg).
+```{r Leer los datos de homicidios en la Ciudad de México}
+cdmx_murders <-
+  st_read("Data/murders_cdmx.gpkg") %>% 
+  glimpse()
+```
+
+También cargamos el contorno de la Ciudad de México:
+```{r Leer el archivo con el perímetro de la CDMX}
+cdmx_border <-
+st_read("Data/cdmx_border.gpkg") %>% 
+  st_transform(6369)
+```
+
+Visualizamos nuestros datos:
+```{r Mapa de Homicidios en la CDMX, warning=FALSE}
+tm_shape(cdmx_border) +
+  tm_polygons() +
+  tm_shape(cdmx_murders) +
+  tm_dots()
+```
+
+Con las siguientes instrucciones separamos un poco los puntos que están en el mismo lugar, así no tendremos puntos en exactamente el mismo lugar, pero no perdemos información sobre lugares que pueden ser recurrentes. A continuación eliminamos todos los registros que no tengan coordenadas geográficas. Además cambiamos la proyección para poder realizar el análisis de distancias, la proyección que utilizaremos es: ITRF2008/UTM Zone 14N-EPSG:6369.
+```{r Limpiar datos y definir Sietema de coordenadas (CRS)}
+cdmx_murders_jitter <-
+cdmx_murders %>%
+  st_transform(6369) %>% 
+  filter(!st_is_empty(geom)) %>% 
+  st_jitter() %>% 
+  glimpse()
+```
+
+Este paso sirve para revisar cuántos registros fueron eliminados por no tener coordenadas geográficas:
+```{r Revisar el número de registros}
+nrow(cdmx_murders)
+nrow(cdmx_murders_jitter)
+```
+
+Para obtener las medidas de tendencia central y de dispersión extraemos un objeto en formato "tibble" sólo con los datos de las coordenadas geográficas en la proyección: ITRF2008/UTM Zone 14N-EPSG:6369.
+```{r Obtención de una tabla limpia, solo con las coordenadas ya proyectadas}
+xy <- 
+  st_coordinates(cdmx_murders_jitter) %>% 
+  as_tibble() %>% 
+  glimpse()
+```
+
+### Media espacial/centro medio
+
+La media espacial proporciona el valor medio de los puntos observados para cada una de las coordenadas X e Y. Muestra el punto central de las distribuciones espaciales de los eventos: 
+```{r Media espacial}
+meanc <-
+  st_point(c(mean(xy$X), mean(xy$Y))) %>% 
+  st_sfc(crs = 6369) %>%
+  st_sf() %>% 
+  glimpse()
+```
+
+### Mediana espacial/centro de la mediana
+
+La mediana espacial/centro de la mediana proporciona una forma eficaz de estimar el parámetro de localización de una población estadística:
+```{r Mediana espacial}
+medianc <-
+  st_point(c(median(xy$X), median(xy$Y))) %>% 
+  st_sfc(crs = 6369) %>%
+  st_sf() %>% 
+  glimpse()
+```
+
+¿Qué aspecto tienen en el mapa?
+```{r Mapa de la Media espacial y la Mediana espacial}
+tm_shape(cdmx_border) +
+  tm_polygons() +
+  tm_shape(cdmx_murders_jitter) +
+  tm_dots() +
+  tm_shape(meanc) +
+  tm_symbols(shape = 15, col = "red", size = 1, alpha = 0.75) +
+  tm_shape(medianc) +
+  tm_symbols(shape = 17, col = "blue", size = 1, alpha = 0.75)
+```
+ 
+### Medidas espaciales de dispersión
+
+Las medidas espaciales de dispersión miden las variaciones espaciales o la dispersión de los puntos/eventos de observación. Entre los métodos habituales que pueden utilizarse para resumir la distribución de los puntos de observación se encuentran la distancia estándar, la distancia estándar ponderada y la elipse de desviación estándar. Estos métodos son extremadamente útiles en situaciones en las que se busca comprender los centros de las distribuciones espaciales y el grado de dispersión de los eventos espaciales.
+
+#### Elipse de desviación estándar
+
+Se trata de una medida de la dispersión de los eventos espaciales en torno a la media espacial. Da la dispersión de los puntos de observación a lo largo de los ejes mayor y menor. Es una medida útil para resumir datos con un sesgo direccional de distribución. La medida también puede utilizarse para identificar las tendencias distributivas de los fenómenos geográficos. Esta medida es capaz de tener en cuenta tanto la distancia como la orientación/direccionalidad.
+```{r Cálculo de la Elipase de Desviación Estándar}
+# Calculate SDE:
+murders_cdmx_sde <-
+  calc_sde(filename = "Data/murders_cdmx_sde.txt", points = xy)
+
+# Write a shapefile with the calculated ellipse:
+convert.to.shapefile(sdeloc, sdeatt, "id", 5) %>% 
+  write.shapefile("Data/murders_cdmx_sde", arcgis = TRUE)
+```
+
+Cargue el shapefile de la elipse y visualícelo:
+```{r Visualización de la Elipse de DE}
+murders_cdmx_sde <-
+  st_read("Data/murders_cdmx_sde.shp") %>% 
+  st_set_crs(6369) %>% 
+  st_transform(4326) %>% 
+  glimpse()
+
+tm_shape(cdmx_border) +
+  tm_polygons() +
+  tm_shape(cdmx_murders_jitter) + 
+  tm_dots() +
+  tm_shape(murders_cdmx_sde) +
+  tm_polygons(alpha = 0.5, col = "red", border.alpha = 0)
+```
+
+## Densidad
+
+La forma básica de calcular la densidad de puntos (intensidad) es:
+```{r Densidad Global}
+cdmx_area <-
+  st_area(cdmx_border)
+density <-
+  nrow(cdmx_murders_jitter) / cdmx_area
+density
+```
+
+Conteo por cuadrantes:
+```{r Densidad local, warning=FALSE}
+cdmx_raster <-
+  raster(cdmx_border)
+res (cdmx_raster) <- 1000
+cdmx_raster
+```
+
+Visualización del conteo por cuadrantes:
+```{r Mapa de densidad local, warning=FALSE}
+cdmx_raster <-
+  rasterize(cdmx_border, cdmx_raster)
+quads <-
+  as(cdmx_raster, 'SpatialPolygons')
+tm_shape(quads) +
+  tm_polygons(col="yellow") +
+  tm_shape(cdmx_murders_jitter) +
+  tm_dots(col = "red")
+```
+
+Transferimos los valores asociados a los datos espaciales de tipo "objeto" (puntos, líneas, polígonos) a las celdas raster:
+```{r Capa raster}
+cdmx_den <-
+  rasterize(coordinates(xy), cdmx_raster, fun = 'count', backgound = 0)
+tm_shape(cdmx_den) +
+  tm_raster()
+#plot(cdmx_border, add = TRUE, alpha= 0.1)
+```
+
+Podemos añadir la frontera de Ciudad de México a nuestro mapa:
+```{r Capa rasyter con el perímetro de la CDMX}
+tm_shape(cdmx_den) +
+  tm_raster() +
+  tm_shape(cdmx_border) +
+  tm_polygons(alpha = 0)
+```
+
+En la práctica siguiente veremos más sobre el análisis de patrones puntuales y las pruebas estadísticas que nos permiten identificar los clusters.
+
+## References
+
+* Chen, J. C., Rubin, E. A., & Cornwall, G. J. *Data Science for Public Policy*.
+* Jean-François (2018). *Análisis Espacial con R. Usar R como un Sistema de Información Geográfica*. National and University Library ”St.Kliment Ohridski¨ın Skopje. Retrieved on October 18, 2021 from [https://www.studocu.com/co/document/universidad-autonoma-latinoamericana/economia/jean-francois-mas-sig/7590631](https://www.studocu.com/co/document/universidad-autonoma-latinoamericana/economia/jean-francois-mas-sig/7590631)
+* Oyana, T. J. (2020). *Spatial Analysis with R: Statistics, Visualization, and Computational Methods*. CRC press.
+* Gimond, M. (2021). *Intro to GIS and Spatial Analysis*. Retrieved October 18, 2021 from [https://mgimond.github.io/Spatial/](https://mgimond.github.io/Spatial/)
