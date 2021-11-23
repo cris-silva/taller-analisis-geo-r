@@ -1,0 +1,596 @@
+---
+title: "1. Lenguaje R básico, paquetes y uso de RMarkdown"
+author: "Ana J. Alegre (jalegre@centrogeo.edu.mx), Cristian Silva (csilva@centrogeo.edu.mx)"
+output: html_notebook
+date: "24/11/2021"
+---
+
+## Introducción
+
+R es un lenguaje de programación orientado principalmente a la computación estadística. Es un software libre ampliamente utilizado para el desarrollo de análisis de datos y, más recientemente, para aplicaciones modernas como la ciencia de datos, el aprendizaje automático o la inteligencia artificial.
+
+En el campo de la geocomputación, R puede utilizarse para analizar, procesar, modelar y visualizar datos geográficos mediante el uso de los paquetes complementarios disponibles que amplían las capacidades del lenguaje base, permitiendo al usuario utilizarlo como un eficaz Sistema de Información Geográfica (SIG).
+
+## Objetivo
+
+El objetivo de esta sección es repasar las funciones básicas del lenguaje R para familiarizarse con su entorno y sintaxis, instalar los paquetes complementarios que se utilizarán durante el taller y proporcionar ejemplos mediante cuadernos RMarkdown interactivos.
+
+## Repaso de la base de R
+
+### Obtención de ayuda
+
+Para obtener ayuda sobre una función en particular, usa `help`:
+```{r Ayuda sobre una función}
+help("for") # Also ?for can be used on R console or highlight the command and pressing F1 on RStudio
+```
+
+Consulta un tema en los archivos de ayuda usnado, `help.search`:
+```{r Buscar en la ayuda}
+help.search("control flow")
+```
+
+### Operadores básicos
+
+Ejemplos de operaciones básicas:
+```{r Operadores básicos}
+34 + 56 # Suma
+45 - 13 # Resta
+34 * 0.14 # Multiplicación
+89.4 / 5 # División
+```
+
+### Asignación de variables
+
+Asigna un valor a una variable con `<-` o `=`:
+```{r Asignar una variable numérica}
+mi_numero = 45
+mi_numero # Visualizar el valor de la variable
+```
+
+```{r Asignar una variable de caracter}
+mi_texto <- "Hola mundo!"
+mi_texto # Visualizar el valor de la variable
+```
+
+### Tipos de datos
+
+Al igual que otros lenguajes de programación, R maneja diferentes tipos de datos básicos para almacenar datos. Es importante entender estos tipos de datos para poder utilizar las funciones de R correctamente.
+
+#### Numérico
+
+Números que tienen un valor decimal o son una fracción:
+```{r Ejemplo de tipo de datos numérico}
+a <- 1.5
+
+# Previsualizar el valor de a:
+a
+```
+
+Para comprobar el tipo de dato de una variable, usa la función `class`:
+```{r Comprobar tipo de datos numérico}
+class(a)
+```
+
+#### Entero
+
+Los números que no contienen valores decimales tienen un tipo de datos *entero*. Por defecto, si se escribe un número sin valor decimal, R lo interpreta como *numérico*, por lo que es necesario declararlo explícitamente como entero utilizando la función `as.integer`:
+```{r Tipo de dato entero}
+a <- as.integer(1.5) # Cuando se convierte el número a entero se trunca la parte decimal
+a
+```
+
+Ahora, comprueba el nuevo tipo de datos de la variable `a`:
+```{r Comprobar el tipo de datos entero}
+class(a)
+```
+
+#### Caracter
+
+Puede ser una letra, número o una combinación de letras encerrada entre comillas es considerada como un tipo de datos de caracter por R. Puede ser letras o números.
+```{r Tipo de dato caracter}
+a <- "Me gusta este taller! (Eso esperamos)" 
+a
+```
+
+Ahora, comprueba el nuevo tipo de dato de la variable `a`:
+```{r Comprobar el tipo de datos caracter}
+class(a)
+```
+
+Los tipos de datos de tipo caracter también se conocen como *cadenas de texto*.
+
+#### Lógico
+
+Una variable que sólo puede tener los valores `TRUE` (verdadero) y `FALSE` (falso) es conocida como *variable lógica* o *booleana*:
+```{r Tipo de datos lógico}
+a <- FALSE
+a
+```
+
+Ahora, comprueba el nuevo tipo de dato de la variable `a`:
+```{r Comprobar el tipo de dato lógico}
+class(a)
+```
+
+#### Vectores
+
+Los vectores son estructuras básicas de datos que se usan en R para computar los valores múltiples a la vez y para almacenar elementos con el mismo tipo de datos. Crea un vector usando `c()`:
+```{r Crear un vector}
+mi_vector <- c(5, 2, 4, 9, 8, 9, 1, 2, 2)
+mi_vector
+```
+
+Ahora, comprueba el nuevo tipo de dato de la variable `mi_vector`:
+```{r Comprobar el tipo de datos del vector}
+class(mi_vector) # Tipo de datos de los elementos del vector
+```
+
+#### Factores
+
+Se usan para indicar una relación cualitativa como colores, bueno y malo, calificaciones de cursos o películas. Son útiles para el modelado estadístico. Para definir un factor, usa un vector con los elementos (niveles) que se usarán y la función `factor`:
+```{r Crear un factor}
+a <- factor(c("bajo", "bajo", "alto", "medio", "alto", "medio", "bajo"))
+a
+```
+
+Para comprobar los niveles de un factor, usa la función `levels`:
+```{r Comprobar los niveles de un factor}
+levels(a)
+```
+
+Ahora, comprueba el nuevo tipo de dato de la variable `a`:
+```{r Comprobar el tipo de datos del factor}
+class(a)
+```
+
+### Operations with vectors
+
+Crear una secuencia simple de enteros:
+```{r Crear una secuencia}
+2:10
+```
+
+Crea una secuencia compleja usando la función `seq`:
+```{r Vector de secuencia compleja}
+seq(from = 0, to = 10, by = 2.5)
+```
+
+Repite elementos en un vector usando la función `rep`:
+```{r Repetir elementos en un vector}
+rep(1:3, times = 4) # Repetir un vector n veces
+rep(1:2, each = 3) # Repetir cada valor de un vector n veces
+```
+
+Ordena los valores de un vector usando `sort`:
+```{r Ordenar un vector}
+sort(mi_vector)
+sort(mi_vector, decreasing = TRUE) # Orden descendente
+```
+
+Invierte el vector usando la función `rev`:
+```{r Invertir un vector}
+rev(mi_vector)
+```
+
+Obtén el conteo de cada elemento del vector usando `table`:
+```{r Conteo de valores de un vector}
+table(mi_vector)
+```
+
+Obtén los valores únicos del vector usando la función `unique`:
+```{r Valores únicos en un vector}
+unique(mi_vector)
+```
+
+Selecciona un elemento particular del vector (el índice empieza desde 1):
+```{r Selecciona por índice}
+mi_vector[4] # Selecciona el 4to. elemento en mi_vector
+```
+
+Selecciona todos los elementos excepto uno en particular:
+```{r Selecciona todo excepto un elemento}
+mi_vector[-4] # Selecciona todo excepto el 4to. elemento en mi_vector
+```
+
+Selecciona un ranfo de elementos de un vector:
+```{r Selecciona por rango}
+mi_vector[2:5] # Selecciona del 2do. al 5to. elemento en mi_vector
+```
+
+Selecciona todos los elementos excepto un rango:
+```{r Selecciona todos excepto un rango}
+mi_vector[-(2:5)] # Selecciona todos los elementos excepto los elementos del 2do. al 5to. en mi_vector
+```
+
+Selecciona elementos en particular
+```{r Seleccionar por índices en particular}
+mi_vector[c(1,5)] # Selecciona sólo el 1ro. y 5to. elementos en mi_vector
+```
+
+Seleccionar elementos que coinciden con un valor:
+```{r Seleccionar por valor}
+mi_vector[mi_vector == 2] # Seleccionar elementos iguales a 2 en mi_vector
+```
+
+Selecciona elementos que cumplan con una condición:
+```{r Seleccionar con una condición}
+mi_vector[mi_vector < 3] # Selecciona los elementos menores a 3 en mi_vector
+```
+
+Seleccionar los elementos que coincidan con valores particulares:
+```{r Selecciona por índices particulares}
+mi_vector[mi_vector %in% c(1, 2, 5)]
+```
+
+### Condicionales
+
+Asigna dos variables:
+```{r Variables para comparar}
+a <- 5
+6 -> b # Asignación inversa
+```
+
+Compara `a` y `b`:
+```{r Condiciones con variables}
+a == b # Igual
+a != b # No igual
+a > b # a es mayor a b
+a >= b # a es mayor o igual que b
+a < b # a es menor que b
+a <= b # a es menor o igual que b
+is.na(a) # No tiene valor (NA)
+is.null(b) # Tiene un valor vacío (NULL)
+```
+
+Comparar vectores:
+```{r Condiciones con vectores}
+mi_vector > a # Comparar cada elemento en mi_vector con la variable a
+b %in% mi_vector # b es un elemento de mi_vector?
+```
+
+### Dataframes
+
+En R, un *dataframe* e una colección de elementos acoplados que construyen una tabla donde cada columna tienen un tipo de datos en particular. Los *dataframes* son las estructuras de datos fundamentales que usa la mayoría de software de modelado de R. Crea un *dataframe* usando la función `data.frame`:
+```{r Crea un dataframe}
+mi_df <- data.frame(x = 1:5, y = c("A", "B", "C", "D", "E"))
+mi_df 
+```
+
+Es posible visualizar el contenido completo del dataframe usando la función `View` (en RStudio, se abre una nueva ventana):
+```{r Ver el dataframe}
+View(mi_df)
+```
+
+Si sólo se necesita visualizar una parte del dataframe, usa la función `head` para visualizar las primeras *n* filas:
+```{r Cabeza del dataframe}
+head(mi_df, n = 5) # Si se omite el parámtero n, la función head regresa las primeras 5 filas por defecto
+```
+
+También puedes visualizar los dataframes usando el panel *Environment* en RStudio.
+
+Para acceder a una fila en particular en dataframe, usa el índice entre brackets ([Fila, Columna]):
+```{r Acceder a una fila en un dataframe}
+mi_df[1, ] # Omite el índice de la columna para acceder a la fila completa
+```
+
+Para acceder a una columna en particular en un dataframe, usa esta sintaxis:
+```{r Acceder a una columna por índice}
+mi_df[, 1] # Omite el índice de la fila para acceder a la columna completa
+```
+
+La manera más común de acceder a los valores en una variable (columna) es usando el separador `$`:
+```{r Acceder a columnas por nombre de variable}
+mi_df$y # Usa el nombre de la variable
+```
+
+Acceder a un elemento en particular en un dataframe usando índices:
+```{r Acceder a un elemento en una dataframe}
+mi_df[2, 2] # Acceder al elemento de la fila 2, columna 2
+```
+
+Entiende las dimensiones del dataframe con estas funciones:
+```{r Dimensiones del dataframe}
+dim(mi_df) # Dimensiones del dataframe (números de columnas y filas)
+nrow(mi_df) # Número de filas en un dataframe
+ncol(mi_df) # Número de columnas en un dataframe
+```
+
+Agrega una columna usando la función `cbind`:
+```{r Agregar columna a un dataframe}
+nueva_columna <- data.frame(z = c(6:10)) # Debe tene el mismo número de filas que el dataframe
+mi_df <- cbind(mi_df, nueva_columna)
+mi_df
+```
+
+Agregar una fila usando la función `rbind`:
+```{r Agregar fila al dataframe}
+nueva_fila <- mi_df[2, ] # Agregar una copia de la fila 2, debe tener los mismos nombres de variables o se agregarán nuevas columnas con los nombres restantes
+mi_df <- rbind(mi_df, nueva_fila)
+mi_df
+```
+
+### Programación
+
+Repetir instrucciones en un bucle usando la función `for`:
+```{r Bucle for}
+for(i in 1:10) {
+  j <- i * 10
+  print(j)
+}
+```
+
+Repite las instrucciones dentro de un bucle controlado por condiones usando la función `while` (si la condición no está bien definida, puede ciclarse infinitamente):
+```{r Bucle while}
+i <- 1
+while(i < 10) {
+  print(i)
+  i <- i + 1
+}
+```
+
+Corre un bloque de código mientras que se cumpla una condición, u opcionalmente otro código cuando no con la función `ìf`:
+```{r Estructura if}
+k <- 4
+if(k > 10) {
+  print("La variable k es mayor que 10")
+} else {
+  print("La variable k es menor o igual que 10")
+}
+```
+
+Crea una función para reusar un bloque de código usando `function`:
+```{r Crear una función}
+calcular_porcentaje <- function(parte, total) {
+  porcentaje <- parte / total * 100
+  return(porcentaje)
+}
+
+# Llama la función:
+calcular_porcentaje(parte = 15, total = 234)
+calcular_porcentaje(15, 234) # Omitiendo nombres de parámetros
+```
+
+### Directorio de trabajo
+
+Como buena práctica, se recomienda establecer un directorio de trabajo para almacenar los scripts, cuadernos y datos para mejor organización y facilidad en la codificación. Recupera el directorio de trabajo actual usando la función `getwd`:
+```{r Recuperar directorio de trabajo}
+getwd()
+```
+
+Define el directorio de trabajo usando la función `setwd`, escribe entre comillas y presiona la tecla Tab para definir la ruta de la carpeta del taller que descargaste desde GitHub.
+```{r Definir la carpeta de trabajo}
+# setwd("C:\iGISc") # Ejemplo para definir la carpeta de trabajo en Windows
+setwd(dir = "/Users/cristiansilva/Documents/Centro Geo/iGISc 2021 Workshop/igisc-workshop_2021/") # Ejemplo para definir la carpeta de trabajo en macOS o Linux
+```
+
+También se pueden usar los proyectos en RStudio para definir una carpeta de trabajo.
+
+### Leer y escribir datos
+
+R usa un formato de archivo con extensión `.RData` para almacenar los datos usados durante una sesión. Guarda las variables de esta sesión en un archivo:
+```{r Guardar variables en un archivo}
+save(mi_vector, mi_texto, mi_df, file = "Data/my_data.RData")
+```
+
+Eliminar todas las variables del entorno:
+```{r Limpiar entorno}
+rm(list = ls())
+```
+
+Carga las variables guardadas en `.RData` usando la función `load`:
+```{r Leer variables de RData}
+load("Data/my_data.RData")
+```
+
+R también puede guardar datos en formato de texto plano como CSV (valores separados por comas), usando estas funciones:
+```{r Guarda los datos como texto plano}
+write.table(mi_df, file = "Data/mi_df.txt", sep = "|") # Guarda el dataframe como texto delimitado usando "|" como separador
+write.csv(mi_df, file = "Data/mi_df.csv") # Guarda el dataframe como CSV usando "," como separador
+write.csv2(mi_df, file = "Data/mi_df2.csv") # Guarda el dataframe como CSV usando ";" como separador (para países donde el punto decimal es ",")
+```
+
+Lee los datos guardados como texto plano y guárdalos en una variable nueva usando estas funciones:
+```{r Leer datos desde texto plano}
+mi_df_desde_delimitado <- read.csv("Data/mi_df.txt", sep = "|")
+mi_df_desde_csv <- read.csv("Data/mi_df.csv")
+mi_df_desde_csv2 <- read.csv2("Data/mi_df2.csv")
+
+# Visualize loaded datasets:
+mi_df_desde_delimitado
+mi_df_desde_csv
+mi_df_desde_csv2
+```
+
+### Entorno
+
+Lista todas las variables que hay en el entorno usando `ls`:
+```{r Lista las variables}
+ls()
+```
+
+Elimina una variable en el entorno usando la función `rm`:
+```{r Elimina una variable}
+rm("mi_df") # Elimina una variable
+rm(list = ls()) # Elimina todas las variables
+```
+
+También puedes usar el panel *Environment* en RStudio para visualizar y eliminar las variables en tu entorno.
+
+## Instalar paquetes
+
+El lenguaje R extiende sus capacidades usando paquetes de terceros. Estos paquetes están almacenados y documentados en el CRAN ( [Comprehensive R Archive Network](https://cran.r-project.org)), y que permiten agregar nuevas funciones a las que incluye originalmente R.
+
+En esta sección se presentan las funcionalidades que ofrecen distintos paquetes que se utilizarán en el taller y que son usados comúnmente para leer, escribir, limpiar, manipular, procesar y visualizar datos.
+
+Para instalar un paquete desde el CRAN, usa la función `install.packages`:
+```{r Install a package}
+install.packages("carData") # carData is a package containing sample data
+```
+
+Otra opción para cargar, instalar y actualizar paquetes es usar el panel *Packages* en RStudio. 
+
+Carga un paquete para usar en la sesión usando la función `library`:
+```{r Carga un paquete}
+library(carData)
+```
+
+Usa una función específica de un paquete sin cargarlo completamente escribiendo el nombre del paquete, dobles dos puntos y el nombre de la función deseada (el paquete debes ser instalado antes): 
+```{r Llamar función específica desde paquete}
+utils::sessionInfo() # Usa la función sessionInfo del paquete utils, lista las funciones disponibles escribiendo utils:: y presionando la tecla Tab
+```
+
+Algunos paquetes incluyen datos de muestra que pueden ser cargados usando la función `data`:
+```{r Carga datos de muestra}
+#carData:: # Presiona la tecla Tab para listar los datos de muestra incluidos en el paquete
+data(Salaries, package = "carData") # Carga los datos de Salaries del paquete carData y guárdalo en una variable
+Salaries # Visualiza los datos
+```
+
+## Paquetes comúnmente usados
+
+### Tidyverse
+
+El paquete `tidyverse` es una colección de paquetes de R diseñados para ciencia de datos. Todos los paquetes comparten en el fondo una filosofía de diseño, gramática y estructura de datos. Tidyverse incluye, pero no se limita a estos paquetes:
+
+* `tibble`: habilita una estructura de datos mejorada.
+* `ggplot2`: para crear gráficos y visualizaciones avanzadas.
+* `dplyr`: para manipulación de datos (*data wrangling*).
+* `tidyr`: para cambiar la forma de los datos.
+* `forcats`: mejora el manejo de factores.
+* `stringr`: mejora la manipulación de cadenas de texto.
+* `readr`: para leer y escribir diferentes formatos de archivos de datos.
+* `purrr`: para mejorar la programación funcional.
+
+Hay más paquetes que comparten el paradigma de `tidyverse` y su uso se considera regulamente como el estado del arte para la programación moderna con R. 
+
+Para instalar el paquete `tidyverse`:
+```{r Instalar tidyverse}
+install.packages("tidyverse")
+```
+
+Para mayor referencia, visita el [sitio de tidyverse](https://www.tidyverse.org) y la [documentación oficial del paquete](https://cran.r-project.org/web/packages/tidyverse/).
+
+**Nota para usuario de Linux**: Antes de instalar `tidyverse` la primera vez en Linux, puede ser necesario instalar previamente algunas librerías del sistema usando la Terminal. Por ejemplo, corre el siguiente comando si se usas una distribución basada en Debian e intenta instalar el `tidyverse`:
+```{bash Instalar librerías de Linux}
+sudo apt install libcurl4-openssl-dev libssl-dev libxml2-dev
+```
+
+### Lubridate
+
+El paquete `lubridate` se usa para trabajar más fácilmente con formatos de fecha-hora y habilita algunas funciones para manejo de fechas y tiempo en R. Para instalar el paquete `lubridate`:
+```{r Instalar lubridate}
+install.packages("lubridate")
+```
+
+Para mayor referencia, visita el [sitio de lubridate](https://lubridate.tidyverse.org) y la [documentación oficial del paquete](https://cran.r-project.org/web/packages/lubridate/index.html).
+
+### ReadXL
+
+El paquete `readxl` se usa para leer y escribir fácilmente datos en formato Microsoft Excel. Para instalar el paquete `readxl`:
+```{r Instalar readxl}
+install.packages("readxl")
+```
+
+Para mayor referencia, visita el [sitio de readxl](https://readxl.tidyverse.org) y la [documentación oficial del paquete](https://cran.r-project.org/web/packages/readxl/).
+
+### Janitor
+
+El paquete `janitor` tiene funciones simples para examinar y limpiar datos, ahorrando tiempo en preparar los datos antes de usarlos. Para instalar el paquete `janitor`:
+```{r Instalar janitor}
+install.packages("janitor")
+```
+
+Para mayor referencia, visita el [sitio de janitor](http://sfirke.github.io/janitor/) y la [documentación oficial del paquete](https://cran.r-project.org/web/packages/janitor/index.html).
+
+### SF
+
+El paquete `sf` se usa para habilitar las *simple features*, una forma estandarizada para codificar datos vectoriales espaciales y ejecutar operaciones geométricas con ellos mediante la librería GEOS. También permite usar la librería GDAL para leer y escribir distintos formatos de datos geográficos como Shapefile, GeoPackage, GeoJSON, etc.
+
+Para instalar el paquete `sf`:
+```{r Instalar sf}
+install.packages("sf")
+```
+
+**Nota para usuarios de macOS y Linux**: Antes de instalar el paquete `sf` puede ser necesario instalar las librerías GDAL y PROJ en el sistema a través de la Terminal. Para mayor detalles en cómo hacerlo, consulta [las instrucciones publicadas en el sitio de sf](https://r-spatial.github.io/sf/).
+
+Para mayor referencia sobre el paquete, visita el [sitio de sf](https://r-spatial.github.io/sf/) y la [documentación oficial](https://cran.r-project.org/web/packages/sf/index.html).
+
+### Raster
+
+El paquete `raster` se usa para leer, escribir, manipular, analizar y modelar datos espaciales, principalemnte en formato raster. Para instalar el paquete `raster`:
+```{r Instalar raster}
+install.packages("raster")
+```
+
+Para mayor referencia, visita el [sitio de raster](https://rspatial.org/raster/) y la [documentación oficial del paquete](https://cran.r-project.org/web/packages/raster/index.html).
+
+### Spatstat
+
+El paquete `spatstat` se usa para estadística espacial y análisis de patrones puntuales en 2D (con algo de soporte para 3D y un soporte muy básico para análisis espacio-temporal). Para instalar el paquete `spatstat`:
+```{r Instalar spatstat}
+install.packages("spatstat")
+```
+
+Para mayor referencia, visita el [sitio de spatstat](http://spatstat.org) y la [documentación oficial del paquete](https://cran.r-project.org/web/packages/spatstat/index.html).
+
+### TMap
+
+El paquete `tmap` se usa para dibujar mapas temáticos con una gramática similar a la de `ggplot2`.
+
+Para instalar el paquete `tmap`:
+```{r Instalar tmap package}
+install.packages("tmap")
+```
+
+Para myor referencia, visita el [sitio de tmap](https://mtennekes.github.io/tmap/) y la [documentación oficial](https://cran.r-project.org/web/packages/tmap/index.html).
+
+### Leaflet
+
+El paquete `leaflet` sirve para crear mapas interactivos en R usando la popular librería *Leaflet* de Javascript para la visualización de datos espaciales.
+
+Para instalar el paquete `leaflet`:
+```{r Instalar leaflet}
+install.packages("leaflet")
+```
+
+Para mayor referencia, visita el [sitio de leaflet para R](https://rstudio.github.io/leaflet/) y la [documentación oficial del paquete](https://cran.r-project.org/web/packages/leaflet/).
+
+### DT (DataTables)
+
+El paquete `DT` se usa para visualizar dataframes de R como tablas interactivas usando una librería de JavaScript llamadas *DataTables*.
+
+Para instalar el paquete `DT`:
+```{r Instalar el paquete DT}
+install.packages("DT")
+```
+
+Para mayor referencia, visita el [sitio de DT](https://rstudio.github.io/DT/) y la [documentación oficialdel paquete](https://cran.r-project.org/web/packages/DT/index.html).
+
+### Paquetes complementarios
+
+También es posible instalar varios paquetes al mismo tiempo pasando la lista de nombres como vector:
+```{r Instalar paquetes complementarios}
+install.packages(c("rmapshaper", "geogrid"))
+```
+
+Algunas veces debido a ciertas razones, es necesario instalar paquetes descontinuados (marcados como *archivados* en el CRAN). Estos paquetes no pueden ser instalados de manera regular como se ha hecho anteriormente, y se requiere usar el código fuente del paquete y compilarlo. Más adelante en este taller usaremos un paquete llamado `aspace`, que ahora se encuentra archivado y que no se ha actualizado en el CRAN desde hace varios años.
+
+Antes de compilar paquetes en Windows, es necesario instalar **RTools** desde [https://cran.rstudio.com/bin/windows/Rtools/](https://cran.rstudio.com/bin/windows/Rtools/). Una vez instalado, compila e instala el paquete usando la función `install.packages` con algunos parámetros extra:
+```{r Instalar aspace de fuente}
+# Instalar primero algunos paquetes dependientes:
+install.packages(c("splancs", "shapefiles", "factoextra", "clusterCrit", "NbClust", "spdep", "corrplot", "igraph"))
+
+# Instalar aspace desde el código fuente:
+install.packages("https://cran.r-project.org/src/contrib/Archive/aspace/aspace_3.2.tar.gz",
+                 repos = NULL,
+                 type = "source")
+```
+
+También es posible instalar cualquier paquete (actual o archivado) a partir de su código fuente usando el procedimiento anterior.
+
+## Referencias
+
+* Xie, Y., Allaire, J. J., & Grolemund, G. (2018). *R markdown: The definitive guide.  [https://bookdown.org/yihui/rmarkdown/](https://bookdown.org/yihui/rmarkdown/)*. CRC Press.
+* Wickham, H., & Grolemund, G. (2017). *R for data science: Import, tidy, transform, visualize and model data. [https://r4ds.had.co.nz](https://r4ds.had.co.nz)*. O'Reilly.
+* *RStudio Cheatsheets*. (n.d.). Rstudio.com. Recuperado el 8 September 2021, desde [https://www.rstudio.com/resources/cheatsheets/](https://www.rstudio.com/resources/cheatsheets/)
+* Tennekes, Martijn. (2018). *tmap : Thematic Maps in R*. Journal of Statistical Software. 84. 10.18637/jss.v084.i06, desde [https://www.researchgate.net/publication/324652152_tmap_Thematic_Maps_in_R/fulltext/5ad9e7eb0f7e9b28593cf867/tmap-Thematic-Maps-in-R.pdf] (https://www.researchgate.net/publication/324652152_tmap_Thematic_Maps_in_R/fulltext/5ad9e7eb0f7e9b28593cf867/tmap-Thematic-Maps-in-R.pdf)
