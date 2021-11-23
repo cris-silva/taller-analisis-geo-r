@@ -1,0 +1,391 @@
+---
+title: "2. Data wrangling de datos planos y espaciales usando R"
+author: "Ana J. Alegre (jalegre@centrogeo.edu.mx), Cristian Silva (csilva@centrogeo.edu.mx)"
+output: html_notebook
+date: "24/11/2021"
+---
+
+## Introducción
+
+El *data wrangling*, también conocido como *limpieza de datos* se refiere al proceso manual o automatizado mediante el cual los datos crudos son transformados en formatos más útiles para el análisis. Estos procesos incluyen la identificación de faltantes de infromación, la eliminación de datos irrelevantes, la combinación de múltiples fuentes de datos o la transformación de su estructura en una más apropiada.
+
+Es posible usar el lenguaje R para leer, escribir y manipular datos que provienen de diferentes formatos, desde texto plano en *CSV* hasta formatos espaciales como *Shapefile*, *GeoPackage*, imágenes raster en *TIFF* entre otras. Una de las ventajas de usar R para el manejo de datos es la posibilidad de automatizar procesos previos al análisis de datos para ahorrar tiempo.
+
+## Objetivo
+
+El primer objetivo de esta sección es realizar ejercicios con las principales funciones del paquete `tidyverse` para la manipulación de datos. Para ello, usaremos el conjunto de datos de muestra llamado `iris` que se incluye en la instalación básica de R.
+
+Posteriormente en este taller analizaremos datos reales que el gobierno de México publica para estudiar los homicidios reportados desde diciembre de 2018 hasta junio de 2021, y compararemos aquellos que ocurren en la Ciudad de México (CDMX) con los que se registraron en los demás estados del país. Entonces, el segundo objetivo de esta sección es preparar los datos que se utilizarán para el análisis que haremos en las siguientes sesiones del taller, presentaremos ejemplos del uso de las diferentes funciones para *data wrangling* que los paquetes de R nos ofrecen para leer y escribir datos planos y espaciales, así como diversos ejercicios para filtrar, ordenar, agrupar y crear nuevas columnas a partir de las existentes en un conjunto de datos.
+
+## Repaso de Tidyverse
+
+Primeramente, limpia todos los objetos del entorno:
+```{r Limpiar entorno}
+rm(list = ls())
+```
+
+Carga el conjunto de datos de muestra `iris` en el entorno de R:
+```{r Cargar datos de muestra}
+data("iris") # Esto carga el conjunto de datos "iris" en el entorno de R
+iris # Visualizar los datos
+```
+
+Carga el paquete `tidyverse` que usaremos para manipular los datos:
+```{r Cargar el paquete tidyverse}
+library(tidyverse)
+```
+
+### Exploración de datos
+
+Para mostrar rápidamente la estructura y contenidos de un conjunto de datos, usa la función `glimpse`:
+```{r Previsualizar datos}
+glimpse(iris)
+```
+
+El operador conocido como *pipa* (`%>%`) toma el resultado de la instrucción anterior y lo convierte en la entrada de la siguiente instrucción. El ejemplo anterior se puede reescribir así:
+```{r Previsualizar datos usando pipa}
+iris %>% 
+  glimpse()
+```
+
+Encuentra los valores únicos de la variable `Species` usando la función `distinct`:
+```{r Valores distintos}
+iris %>% 
+  distinct(Species) # Valores únicos de Species
+```
+
+### Seleccionar variables
+
+Selecciona las variables `Sepal.Length` y `Species` usando sus nombres con la función `select`:
+```{r Seleccionar variables}
+iris %>% 
+  select(Sepal.Length, Species) %>% # Selecciona las variables deseadas
+  glimpse() # Muestra la nueva estructura de datos
+```
+
+Selecciona las variables `Sepal.Length`, `Sepal.Width` y `Species` y multiplícalas para crear una nueva variable llamada `Sepal.Multiply` usando la función `mutate`:
+```{r Crear nuevas variables}
+iris %>% 
+  select(Sepal.Length, Sepal.Width, Species) %>% # Seleccionar las variables
+  mutate(Sepal.Multiply = Sepal.Length * Sepal.Width) %>% # A partir de las variables seleccionadas, crea una nueva
+  glimpse() # Muestra la estructura de datos
+```
+
+### Filtrar los datos
+
+Repite las operaciones anteriores pero conservando sólo las filas donde el valor de `Species` es *setosa*, usando la función `filter`:
+```{r Filtrar los datos}
+iris %>% 
+  select(Sepal.Length, Sepal.Width, Species) %>% 
+  mutate(Sepal.Multiply = Sepal.Length * Sepal.Width) %>% 
+  filter(Species == "setosa") # Filtra las filas con una condición
+```
+
+Repite las operaciones anteriores, pero conservando sólo las filas donde los valores de `Species` son *setosa* y *versicolor* y el valores de `Sepal.Length` es mayor que 4.5, usando la función `filter`:
+```{r Filtrar datos con varias condiciones}
+iris %>% 
+  select(Sepal.Length, Sepal.Width, Species) %>% 
+  mutate(Sepal.Multiply = Sepal.Length * Sepal.Width) %>%
+  filter(Species %in% c("setosa", "versicolor") & Sepal.Length > 4.5) # Filtra las filas con varias condiciones
+```
+
+### Ordenar los datos
+
+Repite las operaciones anteriores y ordena los datos por `Sepal.Length` en orden ascendente usando la función `arrange`:
+```{r Ordenar datos}
+iris %>% 
+  select(Sepal.Length, Sepal.Width, Species) %>% 
+  mutate(Sepal.Multiply = Sepal.Length * Sepal.Width) %>% 
+  filter(Species %in% c("setosa", "versicolor") & Sepal.Length > 4.5) %>% 
+  arrange(Sepal.Length) # Ordena las filas
+```
+
+Repite las operaciones anteriores ordenando los datos ahora por `Sepal.Length` en orden descendente y luego por `Sepal.Multiply` orden ascendente, usando la función `arrange`:
+```{r Ordenar datos con diferentes variables}
+iris %>% 
+  select(Sepal.Length, Sepal.Width, Species) %>% 
+  mutate(Sepal.Multiply = Sepal.Length * Sepal.Width) %>% 
+  filter(Species %in% c("setosa", "versicolor") & Sepal.Length > 4.5) %>% 
+  arrange(desc(Sepal.Length), Sepal.Multiply) # Ordena las filas
+```
+
+### Agrupar y sumarizar los datos
+
+Para crear grupos categóricos usando variables, usa la función `group_by`:
+```{r Agrupar datos}
+iris %>% 
+  group_by(Species) # Agrupar datos por valor
+```
+
+Este conjunto de datos no tiene cambios visibles, pero se crearon grupos para calcular en ellos estadísticos como estos:
+
+* Número de observaciones (n, cuenta)
+* Sumatoria
+* Media
+* Mínimo
+* Máximo
+* Mediana
+* Desviación estándar
+
+Crea nuevas columnas con los estadísticos de la variable `Petal.Length` agrupados por cada valor de la variable `Species`, usando la función `summarize` después de la función `group_by`:
+```{r Sumarizar datos}
+iris %>% 
+  group_by(Species) %>% 
+  summarize(Petal.Cuenta = n(),
+            Petal.Sumatoria = sum(Petal.Length),
+            Petal.Minimo = min(Petal.Length),
+            Petal.Maximo = max(Petal.Length),
+            Petal.Media = mean(Petal.Length),
+            Petal.Mediana = median(Petal.Length),
+            Petal.DesvEst = sd(Petal.Length))
+```
+
+Otra manera de contar el número de observaciones (filas) es usar la función `count` después de agrupar los datos. Después de sumarizar, los datos se conservan agrupados internamente, es por eso que regularmente es necesario eliminar la agrupación y mantener el conjunto de datos transformado antes de realizar cualquier otra operación, para esto se usa la función `ungroup`:
+```{r Desagrupar datos}
+iris %>% 
+  group_by(Species) %>% 
+  count(name = "Petal.Cuenta") %>% 
+  ungroup()
+```
+
+## Leer datos para el análisis
+
+Para realizar los siguientes ejercicios, usaremos los datos abiertos de incidencia delictiva que publica el *Secretariado Ejecutivo del Sistema Nacional de seguridad Pública (SESNSP)* que están disponibles en el portal de datos abiertos del Gobierno de México en [https://www.datos.gob.mx/busca/dataset/incidencia-delictiva-del-fuero-comun](https://www.datos.gob.mx/busca/dataset/incidencia-delictiva-del-fuero-comun). Estos datos contienen la información de delitos cometidos a nivel estatal y serán usados en el taller más adelante para comparar los niveles de homicidios que ocurrieron en la CDMX y en los demás estados del país.
+
+Carga el paquete `lubridate` para manejar más fácilmente los tipos de datos fecha-hora del conjunto de datos, y también carga el paquete `janitor` para realizar algunos procesos de limpieza a los datos:
+```{r Cargar librerías para manipulación y limpieza de datos}
+library(lubridate)
+library(janitor)
+```
+
+Este es un conjunto de datos que originalmente viene en un formato de texto plano separado por comas (CSV). Para leer el archivo, usa la función `read_csv` y asigna los datos a un *tibble* de R:
+```{r Leer datos}
+fuente_de_datos <- "Data/IDEFC_NM.csv" # Desde el archivo descargado en la carpeta Data
+# fuente_de_datos <- "http://datosabiertos.segob.gob.mx/DatosAbiertos/SESNSP/IDEFC_NM__" # Directo desde el sitio de datos abiertos
+
+delitos <- 
+  read_csv(file = fuente_de_datos,
+           locale = locale(encoding = "WINDOWS-1252")) %>%  # El parámetro locale se requiere en macOS or Linux, por que los datos originales se crearon en Windows, sin esto pueden haber caracteres incorrectos en los datos al importar
+  clean_names() %>% # Convierte los nombres de las columnas a minusculas, reemplaza los espacios con '_' y reemplaza caracteres especiales y con acentos
+  glimpse()  # Previsualiza la estructura y las primeras filas de datos
+```
+
+## Preparar los datos
+
+Los datos agrupan los totales de delitos en 12 columnas para cada mes, pero esta estructura no es útil para filtrar los datos por rangos de fecha. Para poder filtrar los datos por fecha, será necesario tener una columna `mes` de tipo de datos *fecha* en una forma de tabla *larga*. El siguiente bloque ejecutará en cadena las siguientes operaciones:
+
+1. Transformar la estructura a una forma *larga*, guardando los nombres de cada columna de mes en una nueva columna llamada `mes_nombre` y sus valores en una nueva columna llamada `total` usando la función `pivot_longer`.
+2. Obtener el número del mes a partir de `mes_nombre` usando la función `case_when` para guardar el valor numérico correspondiente en una nueva columna llamada `mes_numero`.
+3. Construir el mes en formato *fecha* usando las columnas `ano`, `mes_numero` y el número 1 para asumir el primer día del mes, para lo que se usa la función `make_date` para crear una nueva columna llamada `mes`.
+4. Finalmente quitar las columnas `mes_nombre`, `mes_numero`, `ano` que ya son innecesarias usando la función `select` y el signo `-` para excluirlas del *tibble* resultante.
+
+Ejecuta estas operaciones una a una ligándolas con *pipas* (`%>`): 
+```{r Limpiar y transformar datos nacionales}
+delitos <-
+  delitos %>% 
+  pivot_longer(cols = 8:19,
+               names_to = "mes_nombre",
+               values_to = "total") %>% 
+  mutate(mes_numero = case_when(mes_nombre == "enero" ~ 1,
+                                mes_nombre == "febrero" ~ 2,
+                                mes_nombre == "marzo" ~ 3,
+                                mes_nombre == "abril" ~ 4,
+                                mes_nombre == "mayo" ~ 5,
+                                mes_nombre == "junio" ~ 6,
+                                mes_nombre == "julio" ~ 7,
+                                mes_nombre == "agosto" ~ 8,
+                                mes_nombre == "septiembre" ~ 9,
+                                mes_nombre == "octubre" ~ 10,
+                                mes_nombre == "noviembre" ~ 11,
+                                mes_nombre == "diciembre" ~ 12)) %>%
+  mutate(mes = make_date(ano, mes_numero, 1)) %>% 
+  select(-ano, -mes_nombre, -mes_numero) %>% 
+  glimpse()
+```
+
+Para conocer la clasificación de los delitos que necesitamos para el análisis, crea una lista de los tipos de delitos con base en los valores de las columnas `bien_juridico_afectado`, `tipo_de_delito`, `subtipo_de_delito` y `modalidad` y guárdala en una variable nueva llamada `lista_delitos`:
+```{r Crear lista de delitos}
+lista_delitos <-
+  delitos %>% 
+  distinct(bien_juridico_afectado, tipo_de_delito, subtipo_de_delito, modalidad) %>% # Mantiene los valores únicos de las columnas
+  arrange(bien_juridico_afectado, tipo_de_delito, subtipo_de_delito, modalidad) # Ordena los valores de forma ascendente
+
+# Muestra la lista de delitos:
+lista_delitos
+```
+
+Filtra para mantener sólo los datos correspondientes a `Homicidio` y sus subcategorías, que ocurrieron de diciembre 2018 hasta junio 2021:
+```{r Filtrar datos nacionales}
+mes_inicial <- make_date(2018, 12, 1)
+mes_final <- make_date(2020, 6, 1)
+
+homicidios <-
+  delitos%>% 
+  filter(tipo_de_delito == "Homicidio" & between(mes, mes_inicial, mes_final)) %>% 
+  glimpse()
+```
+
+Agrupa y sumariza los totales de homicidios en una nueva variable `homicidios` para cada `clave_ent`, `entidad`, y `mes`:
+```{r Agrupar y sumarizar datos nacionales}
+homicidios_por_estado <-
+  homicidios %>% 
+  group_by(clave_ent, entidad, mes) %>% 
+  summarize(homicidios = sum(total, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  glimpse()
+```
+
+Finalmente, guarda una copia de los datos procesados (se usarán más adelante en el taller):
+```{r Guardar datos nacionales en CSV}
+# write_csv(homicidios_por_estado, file = "Data/murders_by_state.csv")
+write_excel_csv(homicidios_por_estado, file = "Data/murders_by_state.csv") # Usa esta función si los datos se van a abrir en Excel
+```
+
+## Preparar los datos espaciales
+
+### Delitos en la CDMX por puntos
+
+Los datos que usaremos para estudiar los homicidios en la CDMX se obtienen del portal de datos abiertos de la CDMX en (https://datos.cdmx.gob.mx/dataset/carpetas-de-investigacion-fgj-de-la-ciudad-de-mexico)[https://datos.cdmx.gob.mx/dataset/carpetas-de-investigacion-fgj-de-la-ciudad-de-mexico]. Los registros de los delitos de este conjunto de datos están desagregados a nivel de detalle y tienen las coordenadas del lugar donde ocurrieron, lo cual nos permite usar esta información para crear una capa geográfica de puntos que será útil para el análisis geoespacial que realizaremos más adelante en este taller. 
+
+R usa algunos paquetes para cargar, construir, manipular y visualizar datos espaciales. Para ello, carga los paquetes `sf` y `tmap`:
+```{r Cargar paquetes para manipulación y visualización de datos espaciales}
+library(sf) # Para manipulación de datos espaciales
+library(tmap) # Para crear mapas temáticos
+```
+
+El paquete `sf` nos permite leer datos con geometrías como coordenadas o codificadas como **well-known-text** (WKT) para convertirlas a  *simple features* (datos espaciales) siguiendo las siguientes instrucciones. Primero, lee los datos en texto plano usando la función `read_csv`:
+```{r Leer los datos para espacializar}
+sf_fuente_de_datos <- "Data/carpetas_completa_julio_2021.csv.zip" # La función read_csv puede leer archivos comprimidos con ZIP
+
+delitos_cdmx <-
+  read_csv(file = sf_fuente_de_datos) %>% 
+  clean_names() %>% 
+  glimpse()
+```
+
+Identifica las categorías de homicidios en los datos:
+```{r Crea una lista de delitos para CDMX}
+lista_delitos_cdmx <- 
+  delitos_cdmx %>% 
+  distinct(categoria_delito) %>% 
+  arrange(categoria_delito)
+
+lista_delitos_cdmx
+```
+
+Filtra los datos de homicidios para el mismo periodo de tiempo. En este *tibble* usa las variables `categoria_delito` y `fecha_hechos` para filtrar los datos:
+```{r Filtrar datos para CDMX}
+homicidios_cdmx <-
+  delitos_cdmx %>% 
+  mutate(fecha = date(fecha_hechos)) %>% # Crea una columna de tipo fecha (sin hora) a partir de "fecha_hechos" para poder filtrar
+  # filter(categoria_delito == "HOMICIDIO DOLOSO" & between(fecha, mes_inicial, mes_final)) %>% 
+  filter(between(fecha, mes_inicial, mes_final)) %>%
+  glimpse()
+```
+
+```{r}
+homicidios_cdmx %>% 
+  filter(fecha >= mes_inicial)
+```
+
+
+Este conjunto de datos usa un sistema de coordenadas (CRS) con proyección geográfica *WGS84*, para mayor información sobre las proyecciones geográficas y códigos EPSG con que se representan, consulta [https://epsg.io](https://epsg.io). Usa las coordenadas de las columnas  `longitud` y `latitud` para construir las geometrías de punto y convertir el *tibble* con datos planos en *simple features* usando las funciones `st_as_sf` y `st_set_crs`:
+```{r Convertir datos a espaciales}
+homicidios_cdmx <-
+  homicidios_cdmx %>% 
+  st_as_sf(coords = c("longitud", "latitud"), # Definir los nombres de las columnas con las coordenadas
+           na.fail = FALSE, # Dejar las filas sin coordenadas como geometrías vacías
+           remove = FALSE) %>% # Mantener las columnas de las coordenadas
+  st_set_crs(4326) %>% # Usar la proyección WGS84 mediante su código EPSG 4326
+  glimpse()
+```
+
+Una vez convertidos los datos a *simple features*, es posible usarlo cualquier función de *data wrangling* de tidyverse en ellos, como `filter`, `arrange`, etc.
+
+Previsualiza rápidamente los datos espacializados usando la función `qtm`:
+```{r Previsualizar datos espacializados}
+qtm(homicidios_cdmx) # Crea un "Quick Thematic Map"
+```
+
+Es posible escribir un archivo con los datos espaciales en formato *ESRI Shapefile*, pero no se recomienda debido a que no puede almacenar correctamente las columnas de tipo fecha-hora. En su lugar se recomienda usar un formato más moderno como *GeoPackage*.
+
+Guarda los datos en un formato espacial usando la función `sf_write` (usaremos este archivo más adelante en el taller):
+
+```{r Guardar datos espaciales en un archivo}
+# st_write(homicidios_cdmx, dsn = "Data/murders_cdmx.shp", delete_dsn = TRUE) # Guarda como Shapefile, no recomendado si los datos tienen tipos fecha-hora
+st_write(homicidios_cdmx, dsn = "Data/murders_cdmx.gpkg", delete_dsn = TRUE) # Guarda como Geopackage, recomendado
+```
+
+### Datos de delitos nacionales en polígonos de estados
+
+Más adelante en este taller será necesario comparar totales entre estados usando algunos tipos de delito relacionados a los homicidios, como son las extorsiones y los secuestros, por lo que es necesario construir una capa espacial combinando la capa geográfica de estados de México con sus números correspondientes y su población para calcular tasas de delitos por cada 10,000 habitantes para poder hacer una comparación equitativa.
+
+Primero, necesitamos obtener los datos de población por estado que publica el *Instituto Nacional de Estadística, Geografía e Informática (INEGI)* en su Censo de Población y Vivienda 2020, disponible en  [https://www.inegi.org.mx/programas/ccpv/2020/default.html#Resultados_generales](https://www.inegi.org.mx/programas/ccpv/2020/default.html#Resultados_generales). Para conveniencia de este talles, los datos ya están procesados en el archivo `mexico_population_2020.csv` que está en la carpeta `Data`. Lee los datos de población por estados, manteniendo sólamente las variables `cve_ent` y `total`; renombra la columna `total` como `poblacion` usando la función `rename` para hacer los datos más legibles:
+```{r Leer población de México por estados}
+poblacion <-
+  read_csv("Data/mexico_population_2020.csv") %>% 
+  select(cve_ent, poblacion = total) %>% 
+  glimpse()
+```
+
+Necesitamos la capa geográfica de estados de México que ofrece el INEGI, que se puede descargar libremente desde [su sitio](https://www.inegi.org.mx/app/biblioteca/ficha.html?upc=889463776079). Para conveniencia de este talles, hemos guardado una copia preprocesada de esta capa en el archivo geopackage llamado `estados_mexico.gpkg` que está en la carpeta `Data`. Leéla como un objeto espacial `sf` usando la función `st_read` y conserva sólo las columnas `id_estado` y `nom_abreviado`:
+```{r Leer capa de estados}
+estados_mexico <- 
+  st_read("Data/mexico_states.gpkg") %>% 
+  select(id_estado, nom_abreviado) %>%
+  glimpse()
+```
+
+Previsualiza los polígonos de estados usando la función `qtm`:
+```{r Previsualizar capa de estados}
+qtm(estados_mexico) # Previsualiza los datos espaciales usando un"quick thematic map" (qtm)
+```
+
+Para agregar los datos necesarios a la capa espacial, ejecuta la siguiente manipulación de datos:
+
+1. Obtener los datos de extorsión (*Extorsión*), secuestro (*Secuestro*) y homicidios (*Homicidio doloso*) filtrando el conjunto de datos de `delitos` que obtuvimos anteriormente.
+2. Crea una variable nueva llamada `columna` para etiquetar por tipo de delito, usando las funciones `mutate` y `case_when`.
+3. Agrupa por `clave_ent`, `entidad` y `columna`, sumarizando el total de delitos en una nueva columna llamada `total`.
+4. Combina con el conjunto de datos `poblacion` cruzando donde las columnas `clave_ent` y `cve_ent` coincidan la función `left_join`.
+5. Transforma los datos a una *tabla ancha* expandiendo la columna `columna` para obtener una nueva columna para cada tipo de delito, usando la función `pivot_wider`.
+6. Calcula la tasa de delitos por cada 10,000 habitantes para cada tipo de delito, usando la función `mutate`.
+7. Agrega los datos a la capa geográfica `estados_mexico`, combinando con la función `left_join` donde `clave_ent` y `id_estado` coincidan. 
+```{r Combinar datos con capa de estados}
+delitos_estados <-
+  delitos %>% 
+  filter(tipo_de_delito %in% c("Extorsión", "Secuestro") | subtipo_de_delito == "Homicidio doloso") %>% 
+  mutate(columna = case_when(tipo_de_delito == "Extorsión" ~ "extorsion",
+                             tipo_de_delito == "Secuestro" ~ "secuestro",
+                             tipo_de_delito == "Homicidio" ~ "homicidio")) %>% 
+  group_by(clave_ent, entidad, columna) %>% 
+  summarize(total = sum(total, na.rm = T)) %>% 
+  ungroup() %>% # Elimina la agrupación para seguir procesando el tibble
+  left_join(poblacion, by = c("clave_ent" = "cve_ent")) %>% 
+  pivot_wider(names_from = columna, values_from = total) %>% 
+  mutate(ext_10khab = extorsion / poblacion * 10000,
+         sec_10khab = secuestro / poblacion * 10000,
+         hom_10khab = homicidio / poblacion * 10000) %>% 
+  left_join(estados_mexico, by = c("clave_ent" = "id_estado")) %>% 
+  glimpse()
+```
+
+Finalmente, guarda la capa resultante en un *Geopackage*:
+```{r Guardar datos por estado}
+delitos_estados %>% 
+  st_write("Data/states_offenses.gpkg", delete_dsn = TRUE)
+```
+
+
+## Formatos espaciales disponibles para leer/escribir
+
+La función `st_write` usa las librerías GDAL/OGR para guardar datos, y puede leer y escribir cualquier formato de archivo disponible en sus controladores. Para ver una lista de los formatos en que se puede leer y escribir con el paquete `sf` usa la función `st_drivers`:
+```{r Listar formatos espaciales disponibles}
+st_drivers()
+```
+
+## Referencias
+
+* Wickham, H., & Grolemund, G. (2017). *R for data science: Import, tidy, transform, visualize and model data. [https://r4ds.had.co.nz](https://r4ds.had.co.nz)*. O'Reilly.
+* Lovelace, R., Nowosad, J., & Muenchow, J. (2019), *Geocomputation with R. [https://geocompr.robinlovelace.net](https://geocompr.robinlovelace.net)*. CRC Press.
+* Tennekes, M., Nowosad, J. (2021). *Elegant and informative maps with tmap.* Recuperado el 8 de septembiembre, 2021, desde [https://r-tmap.github.io/tmap-book/](https://r-tmap.github.io/tmap-book/)
+* Engel, C. (2019). *Using Spatial Data with R.* cengel.github.io. Recuperado el 8 de septembiembre, 2021, desde [https://cengel.github.io/R-spatial/](https://cengel.github.io/R-spatial).
