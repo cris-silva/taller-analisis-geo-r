@@ -28,6 +28,7 @@ rm(list = ls())
 
 Cargar los paquetes que se van a utilizar:
 ```{r Carga de los paquetes necesarios}
+install.packages("dendextend") # Si no está instalado aún
 library(tidyverse)
 library(sf)
 library(janitor)
@@ -70,7 +71,7 @@ El objetivo de los métodos jerárquicos es agrupar clusters para formar uno nue
 
 Este procedimiento trata de identificar grupos relativamente homogéneos de casos (o variables) a partir de características seleccionadas. Permite trabajar conjuntamente con variables de tipo mixto (cualitativo y cuantitativo), siendo posible analizar las variables brutas o elegir entre una variedad de transformaciones de normalización. Se utiliza cuando el número de conglomerados no se conoce a priori y cuando el número de objetos no es muy grande.  Como se ha mencionado anteriormente, los objetos del análisis de clustering jerárquico pueden ser casos o variables, dependiendo de si se quieren clasificar casos o examinar las relaciones entre variables.
 
-El paquete NbClust proporciona 30 índices para determinar el número de clusters y propone al usuario el mejor esquema de clustering a partir de los diferentes resultados obtenidos variando todas las combinaciones de número de clusters, medidas de distancia y métodos de clustering:
+El paquete `NbClust` proporciona 30 índices para determinar el número de clusters y propone al usuario el mejor esquema de clustering a partir de los diferentes resultados obtenidos variando todas las combinaciones de número de clusters, medidas de distancia y métodos de clustering:
 ```{r Índice para la mejor agrupación}
 states_hierarchical <-
   data_states %>% 
@@ -112,9 +113,10 @@ fviz_dend(hierarchical_states_distance, cex = 0.5)
 
 Gráfico del análisis jerárquico de conglomerados:
 ```{r Gráfico 2 de disimilitudes jerárquicas, warning=FALSE}
-fviz_dend(hierarchical_states_distance, k = 2, 
+fviz_dend(hierarchical_states_distance, 
+          k = 2, 
           cex = 0.5,
-          k_colors = c("#2E9FDF", "#00AFBB", "#E7B800", "#FC4E07"),
+          k_colors = c("#2E9FDF", "#FF9933"),
           color_labels_by_k = TRUE, # Colores x cluster
           rect = TRUE) # Rectangulos
 ```
@@ -148,6 +150,36 @@ Comentarios sobre la agrupación jerárquica:
 * En este último caso, la validez de los clusters se juzga mediante una interpretación cualitativa que puede ser subjetiva.
 
 * El número de conglomerados depende del lugar en el que cortemos el dendograma.
+
+La función `fviz_dend` sólamente permite visualizar los cortes del árbol, sin embargo se requiere otra función para agregar la categoría de los datos a cada clave de estado. Usar la función `cutree` del paquete `dendextend` para calcular los cortes:
+```{r Calcular los clusters del dendograma}
+dendogram_clusters <- dendextend::cutree(hierarchical_states_distance, k = 2, order_clusters_as_data = F)
+dendogram_clusters
+```
+
+Obtener el orden en que aparecen los estados en el dendograma:
+```{r Recuperar el orden de etiquetas}
+dendogram_label_order <- hierarchical_states_distance$order
+dendogram_label_order
+```
+
+Combinar los datos de orden y cluster al que pertenecen y unirlos a la capa de estados mediante la columna `clave_ent`:
+```{r Combinar los clusters con la capa de estados}
+states_clusters <- tibble(clave_ent = dendogram_label_order, 
+                          cluster = dendogram_clusters)
+
+states_dendogram <-
+  data %>% 
+  left_join(states_clusters, by = "clave_ent") %>% 
+  glimpse()
+```
+
+Visualizar el mapa:
+```{r Visualizar clusters en mapa}
+tm_shape(states_dendogram) +
+  tm_polygons("cluster",
+              palette = c("#2E9FDF", "#FF9933"))
+```
 
 ### Análisis de clustering por k-means
 
@@ -468,7 +500,7 @@ states_spatial_cluster4 <-
 ```
 
 Gráfico SKATER para 8 grupos:
-```{r SKATER graph for 8 groups}
+```{r Gráfico de SKATER para 8 groups}
 plot(states_spatial_cluster3,
      coordinates(as(data, Class = "Spatial")),
      cex.lab = 0.7,
@@ -479,7 +511,7 @@ plot(data$geom,
 ```
 
 Mapa SKATER para 8 grupos:
-```{r SKATER map for 8 groups}
+```{r Mapa de SKATER para 8 groups}
 plot(data$geo,
      col = c("red", "green", "blue", "brown", "yellow", "orange", "gray", "purple")[states_spatial_cluster3$groups])
 ```
