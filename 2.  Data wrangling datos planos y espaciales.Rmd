@@ -278,7 +278,7 @@ Filtra los datos de homicidios para el mismo periodo de tiempo. En este *tibble*
 homicidios_cdmx <-
   delitos_cdmx %>% 
   mutate(fecha = date(fecha_hechos)) %>% # Crea una columna de tipo fecha (sin hora) a partir de "fecha_hechos" para poder filtrar
-  # filter(categoria_delito == "HOMICIDIO DOLOSO" & between(fecha, mes_inicial, mes_final)) %>% 
+  filter(categoria_delito == "HOMICIDIO DOLOSO" & between(fecha, mes_inicial, mes_final)) %>% 
   filter(between(fecha, mes_inicial, mes_final)) %>%
   glimpse()
 ```
