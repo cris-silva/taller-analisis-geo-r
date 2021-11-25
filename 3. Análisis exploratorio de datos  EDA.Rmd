@@ -24,7 +24,7 @@ rm(list = ls())
 
 Calcularemos algunos estadísticos descriptivos y crearemos visualizaciones de la distribución de una sola variable (histogramas, gráficos de caja y bigotes). 
 Carga los paquetes que se van a utilizar:
-```{r Load packages}
+```{r Carga de los paquetes necesarios}
 library(tidyverse)
 library(lubridate)
 library(sf)
@@ -315,7 +315,7 @@ tm_shape(cdmx_den) +
 
 En la práctica siguiente veremos más sobre el análisis de patrones puntuales y las pruebas estadísticas que nos permiten identificar los clusters.
 
-## References
+## Referencias
 
 * Chen, J. C., Rubin, E. A., & Cornwall, G. J. *Data Science for Public Policy*.
 * Jean-François (2018). *Análisis Espacial con R. Usar R como un Sistema de Información Geográfica*. National and University Library ”St.Kliment Ohridski¨ın Skopje. Retrieved on October 18, 2021 from [https://www.studocu.com/co/document/universidad-autonoma-latinoamericana/economia/jean-francois-mas-sig/7590631](https://www.studocu.com/co/document/universidad-autonoma-latinoamericana/economia/jean-francois-mas-sig/7590631)
