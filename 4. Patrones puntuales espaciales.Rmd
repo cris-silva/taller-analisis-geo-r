@@ -1,0 +1,220 @@
+---
+title: "4. Análisis de patrones puntuales"
+author: "Ana J. Alegre (jalegre@centrogeo.edu.mx), Cristian Silva (csilva@centrogeo.edu.mx)"
+output: html_notebook
+date: "25/11/2021"
+---
+
+## Introducción
+
+En el ejercicio anterior empezamos a analizar un poco los datos espaciales puntuales. En este veremos un poco más el análisis de datos espaciales puntuales, así como algunas pruebas estadísticas para identificar patrones de agrupación.
+
+## Objectivo
+
+Realizar una introducción al análisis de patrones puntuales, revisar los diferentes tipos de distribución espacial, así como repasar algunas de las principales pruebas estadísticas para conocer nuestros datos e identificar patrones de acumulación.
+
+## Preparación de los Datos
+
+En primer lugar, eliminamos todos los objetos del entorno:
+```{r Limpiar las variables del entorno}
+rm(list = ls())
+```
+
+Carga los paquetes que se van a utilizar:
+```{r Carga de los paquetes necesarios}
+library(tidyverse)
+library(sf)
+library(raster)
+library(spatstat)
+library(tmap)
+```
+
+Leer el archivo de datos puntuales de los homicidios en la CDMX:
+```{r Leer el archivo de los homicidios para la CDMX}
+murders_cdmx <-
+  st_read("Data/murders_cdmx.gpkg") %>% 
+  st_transform(6369) %>% # Transform CRS from WGS84 geographic coordinates to projected Mexico ITRF2008 UTM Z14N
+  filter(!st_is_empty(geom)) %>% # Omit all features with empty geometry
+  glimpse()
+```
+
+También leemos el archivo con el polígono de la CDMX:
+```{r Leer el archivo con el polígono de la CDMX}
+cdmx_border <-
+  st_read("Data/cdmx_border.gpkg") %>% 
+  st_transform(6369) # Transform CRS from WGS84 geographic coordinates to projected Mexico ITRF2008 UTM Z14N
+qtm(cdmx_border) # Quickly visualize CDMX polygon
+```
+
+Creamos una *ventana de observación*, convertimos el perímetro `cdmx_border` en un objeto *sf layer* con la siguiente función `as.owin`:
+```{r Definir la ventana de observación}
+cdmx_window <- as.owin(cdmx_border)
+```
+
+Convertir el objeto *sf layer* de los asesinatos en *patrón de puntos planos* (`ppp`) utilizando la función `as.ppp`:
+```{r Crear un objeto ppp, warning=FALSE}
+murders_ppp <- as.ppp(murders_cdmx)
+```
+
+Por defecto `as.ppp` utiliza los puntos de extensión como ventana de observación, cámbielo utilizando la función `Window` para utilizar la `cdmx_window` definida a continuación:
+```{r Definir la ventana de observación para el objeto ppp}
+Window(murders_ppp) <- cdmx_window
+```
+
+## Análisis espacial de patrones puntuales
+
+### Distribución espacial de puntos
+
+#### Prueba Chi-cuadrada:
+
+Para comprobar si la distribución espacial de puntos es aleatoria una de las pruebas que podemos utilizar es la Chi cuadrada:
+```{r Prueba Chi cuadrada}
+quadrat.test(murders_ppp, nx = 100, ny = 100)
+```
+
+Si la χ2 observada es menor que el valor crítico, entonces aceptamos la hipótesis nula. Si no, entonces aceptamos la hipótesis alternativa. Buscar los valores críticos en p < 0.05.
+
+Como se puede observar en los resultados de esta prueba, se rechaza la hipótesis de aleatoriedad, es decir, existe un patrón de acumulación de homicidios en determinados lugares.
+
+### Distancia promedio al vecino más cercano (Average Nearest Neighbor-ANN)
+
+ANN es una prueba de clustering global que no señala clusters específicos, sino que busca identificar una Relación de Vecinos Más Cercanos que describa los clusters en todo el conjunto de datos (n= 1993).
+```{r ANN para el primer vecino}
+murders_ndist_1 <- nndist(murders_ppp)
+mean(murders_ndist_1)
+```
+
+La distancia media observada entre el primer vecino más cercano es de 265 metros en el periodo estudiado (diciembre de 2018 a junio de 2021).
+```{r ANN para el segundo vecino}
+murders_ndist_2 <- nndist(murders_ppp, k=2)
+mean(murders_ndist_2)
+```
+
+La distancia media observada entre el segundo vecino más cercano es de 414 metros en el periodo estudiado (diciembre de 2018 a junio de 2021).
+
+### Función K de Ripley
+
+A diferencia del método del vecino más cercano, que se basa en las distancias sólo a los eventos más cercanos, el enfoque de la función K explora un patrón espacial a través de una gama de escalas espaciales.
+
+Con la función K de Ripley podemos identificar clusters, teniendo en cuenta la dependencia espacial de los puntos dentro de distancias e incrementos predefinidos. Además, nos permite hacer inferencias sobre la existencia de otros posibles puntos, basándonos en la distribución de los observados.
+
+Con esta función, la K de Ripley, nos interesa ver la línea roja de puntos y la línea negra. La primera muestra cómo debería ser la distribución teórica de los puntos. La segunda muestra cómo se distribuyen según los puntos observados. Cuando la línea negra está por encima de la línea roja significa que hay agrupación. Además, muestra las distancias en metros a las que pueden existir otros puntos (eje x).
+
+Calcular la K de Ripley sin corrección y 99 simulaciones, utilizando la función `envelope` con `fun = Kest` (notar que se encuentra comentada la opción para calcular la función K de Ripley con corrección:
+```{r Función K de Ripley}
+murders_k <- envelope(murders_ppp, fun = Kest, nrank = 2, nsim = 99, correction = "none") # Without correction
+# murders_k <- envelope(murders_ppp, fun = Kest, nrank = 2, nsim = 99, correction = "best") # Optionally using correction
+```
+
+Visualice los resultados utilizando la función predeterminada `plot`:
+```{r Gráfica de la Función K de Ripley}
+plot(murders_k, main = "Ripley's K for murders in CDMX")
+```
+
+¿Qué vemos? Sólo la línea negra está por encima de la roja, por lo que hay un patrón de agrupación en los asesinatos reportados en la Ciudad de México.
+
+### Función L
+
+La función L es básicamente la función K, pero ayuda a visualizar mejor las distancias. Esto se debe a que la función L corrige la varianza que aumenta con la distancia.
+
+Hay dos opciones para visualizar la función L. La primera como se muestra a continuación L(r) frente a r (la diagonal).
+
+Calcular la *función L* para los homicidios, utilizando la función `Lest`:
+```{r Función L}
+murders_l <- envelope(murders_ppp, fun=Lest, nrank=2, nsim=200, correction = "none")
+#murders_l <- Lest(murders_ppp)
+```
+
+Visualización de los resultados utilizando la función `plot` por defecto L(r):
+```{r Gráfica 1 de la Función L}
+plot(murders_l, main = "L Function for murders in CDMX")
+```
+
+Esta segunda opción de gráfico es más óptima ya que permite visualizar mejor el punto máximo de las distancias de los puntos, según la función K (la diagonal).
+```{r Gráfica 2 de la Función L}
+plot(murders_l, . -r ~ r, ylab=expression(hat("L")), xlab = "d (m)", main="L Function L(d)- d for murders in CDMX")
+```
+
+Observando los resultados con la función L, podemos ver que el punto máximo está entre 8 km - 10 km.
+
+### Función G: Distancia al evento más cercano
+
+La función *G* mide la distribución de las distancias de un evento arbitrario al evento más cercano.
+
+Calcula la *función G* con 99 simulaciones, utilizando la función `envelope` con `fun = Gest`:
+```{r Función G}
+murders_g <- envelope(murders_ppp, fun = Gest, nrank = 2, nsim = 99)
+```
+
+Visualización de los resultados utilizando la función predeterminada `plot`:
+```{r Gráfica de la Función G}
+plot(murders_g, main = "G Function: Distance to the nearest murder event in CDMX")
+```
+
+Se puede observar un patrón de acumulación en los homicidios de la Ciudad de México, ya que el 80 por ciento de las observaciones se encuentran en un radio de aproximadamente 500 metros, rechazando así la hipótesis de la aleatoriedad.
+
+### Función F: Distancia de un punto aleatorio al suceso más cercano
+
+La *función F* mide la distribución de todas las distancias desde un punto arbitrario del plano hasta su suceso más cercano. Esta función suele llamarse "función de espacio vacío" porque es una medida de la separación media que queda entre los sucesos.Este valor es idéntico al valor esperado por la función G, esto porque los puntos del proceso de Poisson son independientes entre sí.
+
+Calculo de la *función F* con 99 simulaciones, utilizando la función `envelope` con `fun = Fest`:
+```{r Función F}
+murders_f <- envelope(murders_ppp, fun = Fest, nrank = 2, nsim = 99)
+```
+
+Visualización de los resultados utilizando la función predeterminada `plot`:
+```{r Gráfica de la Función F}
+plot(murders_f, main = "F Function: Distance from a random point to the nearest murder event in CDMX")
+```
+
+Observing the results there is a pattern of accumulation, confirming the rejection of the hypothesis of randomness. Also with this function we can observe the speed of the accumulation, the first thousand observations accumulate faster and then they are maintained.
+
+## Densidad
+
+### Densidad globañ
+
+La densidad global es sólo el número de eventos sobre el total del área de estudio.
+
+Calcula la densidad global dividiendo el total de asesinatos (usando la función `nrow`) por el área de la CDMX (usando la función `st_area`):
+```{r Densidad Global}
+murders_global_density <- nrow(murders_cdmx)/st_area(cdmx_border)
+murders_global_density
+```
+
+### Densidad local
+
+Crea una cuadrícula de 50x50 para calcular la densidad por cuadrantes cuadrados:
+```{r Densidad Local}
+murders_quadrat <- quadratcount(murders_ppp, nx = 20, ny = 20)
+plot(murders_quadrat, main = "Murders by quadrant in CDMX")
+```
+
+### Densidad de Kernel
+
+La densidad de Kernel calcula la densidad de las entidades puntuales alrededor de cada celda del raster de salida. Conceptualmente, se ajusta una superficie curva uniforme sobre cada punto. El valor de la superficie es más alto en la ubicación del punto y disminuye a medida que aumenta la distancia del punto, llegando a cero en la distancia del radio de búsqueda del punto. Calcular una función de intensidad suavizada por el kernel a partir de un patrón de puntos.
+
+Calcular la estimación de la densidad del kernel (KDE) utilizando la función `density.ppp`, ahora con un valor de sigma igula a 500, es decir, el ancho de banda de suavizado (la cantidad de suavizado) (umbral):
+```{r Densidad de Kernel}
+murders_kde <- density.ppp(murders_ppp, kernel = "gaussian", sigma = 500, adjust = 2.5, diggle = FALSE)
+plot(murders_kde, main = "Murders KDE in CDMX")
+```
+
+Para exportar la densidad como un archivo raster, es necesario asignar un sistema de referencia de coordenadas (CRS) utilizando la función `crs` y escribir el archivo con la función `WriteRaster`:
+
+Para obtener datos sobre el CRS, consulte: "Overview of Coordinate Reference Systems (CRS) in R".
+```{r Exportar la Denisdad de Kernel a un archivo TIFF, warning=FALSE}
+murders_kde_raster <- raster(murders_kde)
+
+crs(murders_kde_raster) <- "+proj=utm +zone=14 +ellps=GRS80 +units=m +no_defs"
+
+writeRaster(murders_kde_raster,
+            filename = "Data/murders_kde.tiff",
+            format = "GTiff",
+            overwrite = TRUE,
+            NAflag = -9999)
+```
+
+## Referencias:
+
+* Baddeley, A. (2008). *Analysing spatial point patterns in R.* Technical report, CSIRO, 2010. Version 4. Available at [www.csiro.au/resources/pf16h.html] (www.csiro.au/resources/pf16h.html).
+* Oyana, T. J. (2020). *Spatial Analysis with R: Statistics, Visualization, and Computational Methods.* CRC press.
