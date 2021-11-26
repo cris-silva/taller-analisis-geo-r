@@ -108,7 +108,7 @@ murders_k <- envelope(murders_ppp, fun = Kest, nrank = 2, nsim = 99, correction 
 
 Visualice los resultados utilizando la función predeterminada `plot`:
 ```{r Gráfica de la Función K de Ripley}
-plot(murders_k, main = "Ripley's K for murders in CDMX")
+plot(murders_k, main = "K de Ripley's para homicidios en la CDMX")
 ```
 
 ¿Qué vemos? Sólo la línea negra está por encima de la roja, por lo que hay un patrón de agrupación en los asesinatos reportados en la Ciudad de México.
@@ -127,12 +127,14 @@ murders_l <- envelope(murders_ppp, fun=Lest, nrank=2, nsim=200, correction = "no
 
 Visualización de los resultados utilizando la función `plot` por defecto L(r):
 ```{r Gráfica 1 de la Función L}
-plot(murders_l, main = "L Function for murders in CDMX")
+plot(murders_l, main = "Función L para homicidios en la CDMX")
 ```
 
 Esta segunda opción de gráfico es más óptima ya que permite visualizar mejor el punto máximo de las distancias de los puntos, según la función K (la diagonal).
 ```{r Gráfica 2 de la Función L}
-plot(murders_l, . -r ~ r, ylab=expression(hat("L")), xlab = "d (m)", main="L Function L(d)- d for murders in CDMX")
+plot(murders_l, . -r ~ r, ylab=expression(hat("L")), 
+     xlab = "d (m)", 
+     main=" Función L (d)-d para homicidios en la CDMX")
 ```
 
 Observando los resultados con la función L, podemos ver que el punto máximo está entre 8 km - 10 km.
@@ -148,7 +150,8 @@ murders_g <- envelope(murders_ppp, fun = Gest, nrank = 2, nsim = 99)
 
 Visualización de los resultados utilizando la función predeterminada `plot`:
 ```{r Gráfica de la Función G}
-plot(murders_g, main = "G Function: Distance to the nearest murder event in CDMX")
+plot(murders_g, 
+     main = "Funcion G: Distancia al evento de homiciido más cercano en la CDMX")
 ```
 
 Se puede observar un patrón de acumulación en los homicidios de la Ciudad de México, ya que el 80 por ciento de las observaciones se encuentran en un radio de aproximadamente 500 metros, rechazando así la hipótesis de la aleatoriedad.
@@ -164,14 +167,14 @@ murders_f <- envelope(murders_ppp, fun = Fest, nrank = 2, nsim = 99)
 
 Visualización de los resultados utilizando la función predeterminada `plot`:
 ```{r Gráfica de la Función F}
-plot(murders_f, main = "F Function: Distance from a random point to the nearest murder event in CDMX")
+plot(murders_f, main = "Function F: Distancia de un punto aleatorio al suceso de homicidio más cercano en la CDMX")
 ```
 
-Observing the results there is a pattern of accumulation, confirming the rejection of the hypothesis of randomness. Also with this function we can observe the speed of the accumulation, the first thousand observations accumulate faster and then they are maintained.
+Observando los resultados hay un patrón de acumulación, lo que confirma el rechazo de la hipótesis de aleatoriedad. También con esta función podemos observar la velocidad de la acumulación, las primeras mil observaciones se acumulan más rápido y luego se mantienen.
 
 ## Densidad
 
-### Densidad globañ
+### Densidad global
 
 La densidad global es sólo el número de eventos sobre el total del área de estudio.
 
@@ -186,7 +189,7 @@ murders_global_density
 Crea una cuadrícula de 50x50 para calcular la densidad por cuadrantes cuadrados:
 ```{r Densidad Local}
 murders_quadrat <- quadratcount(murders_ppp, nx = 20, ny = 20)
-plot(murders_quadrat, main = "Murders by quadrant in CDMX")
+plot(murders_quadrat, main = "Homicidios por cuandrantes en la CDMX")
 ```
 
 ### Densidad de Kernel
@@ -196,7 +199,7 @@ La densidad de Kernel calcula la densidad de las entidades puntuales alrededor d
 Calcular la estimación de la densidad del kernel (KDE) utilizando la función `density.ppp`, ahora con un valor de sigma igula a 500, es decir, el ancho de banda de suavizado (la cantidad de suavizado) (umbral):
 ```{r Densidad de Kernel}
 murders_kde <- density.ppp(murders_ppp, kernel = "gaussian", sigma = 500, adjust = 2.5, diggle = FALSE)
-plot(murders_kde, main = "Murders KDE in CDMX")
+plot(murders_kde, main = "Densidad de Kernel para homicidios en la CDMX")
 ```
 
 Para exportar la densidad como un archivo raster, es necesario asignar un sistema de referencia de coordenadas (CRS) utilizando la función `crs` y escribir el archivo con la función `WriteRaster`:
