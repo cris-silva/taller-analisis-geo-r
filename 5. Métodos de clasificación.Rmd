@@ -28,7 +28,7 @@ rm(list = ls())
 
 Cargar los paquetes que se van a utilizar:
 ```{r Carga de los paquetes necesarios}
-install.packages("dendextend") # Si no está instalado aún
+#install.packages("dendextend") # Si no está instalado aún
 library(tidyverse)
 library(sf)
 library(janitor)
