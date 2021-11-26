@@ -11,7 +11,7 @@ La inspección visual de los datos es un principio central del Análisis Explora
 
 ## Objectivo
 
-IEn esta sección revisaremos algunas instrucciones para echar un primer vistazo a nuestros datos, calcularemos algunos estadísticos descriptivos y crearemos visualizaciones de la distribución (histogramas y boxplot). Además, pasaremos de estos estadísticos básicos como las medidas de tendencia central y de dispersión a derivar y visualizar estos mismos conceptos en el análisis espacial.
+En esta sección revisaremos algunas instrucciones para echar un primer vistazo a nuestros datos, calcularemos algunos estadísticos descriptivos y crearemos visualizaciones de la distribución (histogramas y boxplot). Además, pasaremos de estos estadísticos básicos como las medidas de tendencia central y de dispersión a derivar y visualizar estos mismos conceptos en el análisis espacial.
 
 ## Preparación de los datos
 
@@ -23,6 +23,7 @@ rm(list = ls())
 ## Análisis Exploratiro de datos Univariado
 
 Calcularemos algunos estadísticos descriptivos y crearemos visualizaciones de la distribución de una sola variable (histogramas, gráficos de caja y bigotes). 
+
 Carga los paquetes que se van a utilizar:
 ```{r Carga de los paquetes necesarios}
 library(tidyverse)
@@ -68,10 +69,10 @@ Uno de los medios más sencillos de generar un resumen gráfico es trazar la dis
 ```{r Histograma de homicidios}
 h_murders <- ggplot(state_data, aes(x= homicidio)) +
   geom_histogram(bins = 8, alpha = 0.75) +
-  labs(title = "México: Murders histogram by state",
-       subtitle = "December 2018 to june 2021",
-       x = "Murders",
-       y = "States")
+  labs(title = "México: Histograma de homicidios por estado",
+       subtitle = "Diciembre 2018 a junio 2021",
+       x = "Homicidio",
+       y = "Estados")
 h_murders
 ```
 
@@ -81,19 +82,19 @@ El diagrama de caja muestra la forma de la distribución, el centro de los datos
 ```{r Diagrama de caja de homicidios}
 bp_murders <- ggplot(state_data, aes(y= homicidio)) +
   geom_boxplot() +
-  labs(title = "México: Murders boxplot",
-       subtitle = "December 2018 to june 2021",
-       y= "Murders")
+  labs(title = "México: Diagrama de caja para homicidios",
+       subtitle = "Diciembre 2018 a junio 2021",
+       y= "Homicidios")
 bp_murders
 ```
 
 ¿Cómo se ve esto en un mapa?
 ```{r Mapa de cuartil de homicidios por estados}
 tm_shape(state_data) +
-  tm_polygons("homicidio", style = "quantile", n=4, title = "Murders by quartile")
+  tm_polygons("homicidio", style = "quantile", n=4, title = "Homciidios por cuartiles")
 ```
 
-Hubo ocho estados con más de 7.500 asesinatos: Baja California, Chihuahua, Jalisco, Michoacán, Guanajuato, Guerrero, Estado de México y Veracruz.
+Hubo ocho estados con más de 7.500 homicidios: Baja California, Chihuahua, Jalisco, Michoacán, Guanajuato, Guerrero, Estado de México y Veracruz.
 
 ## Análisis Exploratorio de Datos Multivariado 
 
@@ -114,14 +115,14 @@ Ahora podemos ver los gráficos de caja y bigotes de diferentes variables y comp
 boxplot_by_crime <-
   ggplot(state_data_long) +
   geom_boxplot(aes(x= delito, y = total)) +
-  labs(title = "México: Boxplot by crime",
-       subtitle = "December 2018 to july 2021",
+  labs(title = "México: Diagrama de caja por tipo de delito",
+       subtitle = "Diciembre 2018 a junio 2021",
        y= "Murders")
 
 boxplot_by_crime
 ```
 
-Podemos ver que las denuncias por asesinato tienen un volumen mucho mayor que las demás en México y también podemos ver los valores atípicos.
+Podemos ver que las denuncias por homicidio tienen un volumen mucho mayor que las demás en México y también podemos ver los valores atípicos.
 
 ### Gráfico de dispersión
 
@@ -129,20 +130,20 @@ Se trata de una representación visual que muestra la dirección y la fuerza de 
 ```{r Diagrama de dispersión Homicidios vs. población}
 ggplot(state_data, aes(x= homicidio, y = poblacion)) +
   geom_point() +
-  labs(title = "México: Relationship between murders and population",
-       subtitle = "December 2018 to july 2021",
-       x = "Murders",
-       y = "Population")
+  labs(title = "México: Diagrama de dispersión homicidios vs. población",
+       subtitle = "Diciembre 2018 a junio 2021",
+       x = "Homicidios",
+       y = "Población")
 ```
 
 Para explorar visualmente las relaciones entre varios pares de variables, el mejor enfoque a utilizar es una matriz de dispersión. En una única visualización, la matriz de dispersión puede representar las relaciones entre todos los posibles pares de variables seleccionados para el análisis.
 ```{r Diagrama de dispersión Delitos vs. población}
 ggplot(state_data_long, aes(x= total, y = poblacion)) +
   geom_point() +
-  labs(title = "México: Relationship between crimes and population",
-       subtitle = "December 2018 to july 2021",
-       x = "Crimes",
-       y = "Population") +
+  labs(title = "México: Diagramas de dispersión delitos vs. población",
+       subtitle = "Diciembre 2018 a junio 2021",
+       x = "Delitos",
+       y = "Población") +
   facet_wrap(~delito, ncol = 2, scales = "free")
 ```
 
@@ -152,7 +153,7 @@ La estadística espacial se ocupa de la observación registrada en pares. La est
 
 Hay dos tipos comunes de medidas que pueden llevarse a cabo: (1) una que mide la centralidad (medidas espaciales de tendencia central) y (2) otra que mide la dispersión (medidas espaciales de dispersión) de los eventos en el espacio. Estas medidas proporcionan resúmenes útiles de una distribución espacial.
 
-Para este ejercicio vamos a utilizar datos espaciales puntuales de los reportes de asesinatos en la Ciudad de México, el archivo "geopackage" que guardaste en la práctica anterior (murders_cdmx.gpkg).
+Para este ejercicio vamos a utilizar datos espaciales puntuales de los reportes de homicidios en la Ciudad de México, el archivo "geopackage" que guardaste en la práctica anterior (murders_cdmx.gpkg).
 ```{r Leer los datos de homicidios en la Ciudad de México}
 cdmx_murders <-
   st_read("Data/murders_cdmx.gpkg") %>% 
