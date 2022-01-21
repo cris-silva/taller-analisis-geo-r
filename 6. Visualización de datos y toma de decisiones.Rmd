@@ -180,7 +180,9 @@ tm_shape(estados_delitos) +
              col = "hom_10khab",
              title.size  = "Tasa de homicidios por cada 10 mil hab.",
              title.col = "Homicidios por cada 10 mil habitantes") +
-  tm_layout(main.title = "Estados más violentos en Mexico. Dic. 2018 a Jun. 2021.") +
+  tm_layout(main.title = "Estados más violentos en Mexico. Dic. 2018 a Jun. 2021.",
+            legend.title.size = 1.2,
+            legend.text.size = 0.8) +
   tm_credits("Datos de INEGI y SESNSP.",
              position = c("left", "bottom"))
 ```
