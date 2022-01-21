@@ -1,8 +1,10 @@
 ---
 title: "1. Lenguaje R básico, paquetes y uso de RMarkdown"
 author: "Ana J. Alegre (jalegre@centrogeo.edu.mx), Cristian Silva (csilva@centrogeo.edu.mx)"
-output: html_notebook
 date: "24/11/2021"
+output:
+  html_document:
+    df_print: paged
 ---
 
 ## Introducción
@@ -330,7 +332,7 @@ while(i < 10) {
 
 Corre un bloque de código mientras que se cumpla una condición, u opcionalmente otro código cuando no con la función `ìf`:
 ```{r Estructura if}
-k <- 4
+k <- 40
 if(k > 10) {
   print("La variable k es mayor que 10")
 } else {
@@ -578,7 +580,7 @@ Algunas veces debido a ciertas razones, es necesario instalar paquetes descontin
 Antes de compilar paquetes en Windows, es necesario instalar **RTools** desde [https://cran.rstudio.com/bin/windows/Rtools/](https://cran.rstudio.com/bin/windows/Rtools/). Una vez instalado, compila e instala el paquete usando la función `install.packages` con algunos parámetros extra:
 ```{r Instalar aspace de fuente}
 # Instalar primero algunos paquetes dependientes:
-install.packages(c("splancs", "shapefiles", "factoextra", "clusterCrit", "NbClust", "spdep", "corrplot", "igraph"))
+install.packages(c("splancs", "shapefiles", "factoextra", "clusterCrit", "NbClust", "spdep", "corrplot", "igraph", "Hmisc"))
 
 # Instalar aspace desde el código fuente:
 install.packages("https://cran.r-project.org/src/contrib/Archive/aspace/aspace_3.2.tar.gz",
